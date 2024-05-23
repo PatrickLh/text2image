@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, minimum-scale=1.0"
+    />
+    <title>Document</title>
+    <link rel="stylesheet" href="./js/bootstrap/bootstrap.min.css" />
+    <script src="./js//bootstrap/bootstrap.min.js"></script>
+    <script src="./fileServer.min.js"></script>
+    <script src="./html2canvas.min.js"></script>
+    <style>
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+      }
+      .app {
+        padding: 12px 0;
+        box-sizing: border-box;
+        /* min-width: 1024px; */
+        font-family: "Arial", "Microsoft YaHei", "黑体", "宋体", sans-serif;
+        font-size: 12px;
+      }
+      .canvas-container {
+        overflow: auto;
+      }
+      .canvas {
+        height: 64px;
+        width: 64px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        word-break: keep-all;
+        color: #fff;
+        background-color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar bg-primary sticky-top">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1" style="color: #fff">简易图片生成工具</span>
+      </div>
+    </nav>
+    <div class="container">
+      <div class="app">
+        <div class="row">
+          <div class="col-lg-2 col-sm-12 mb-3">
+            <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title mb-3">容器设置</h5>
+                <div>
+                  <h6 class="card-subtitle mb-2 text-muted">尺寸设置</h6>
+                  <div class="mb-3">
+                    <label for="widthSettingInput" class="form-label">
+                      宽度(px)：
+                    </label>
+                    <input
+                      type="text"
+                      id="widthSettingInput"
+                      value="64"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="heightSettingInput" class="form-label">
+                      高度(px)：
+                    </label>
+                    <input
+                      type="text"
+                      id="heightSettingInput"
+                      value="64"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h6 class="card-subtitle mb-2 text-muted">圆角</h6>
+                  <div class="mb-3">
+                    <label for="borderRadiusSettingInput" class="form-label">
+                      圆角百分比(%)：
+                    </label>
+                    <input
+                      type="text"
+                      id="borderRadiusSettingInput"
+                      value="0"
+                      class="form-control"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h6 class="card-subtitle mb-2 text-muted">背景色设置</h6>
+                  <input
+                    type="color"
+                    id="bgColorSettingPicker"
+                    value="#fff"
+                    class="form-control form-control-color mb-3"
+                  />
+                  <div>
+                    <div class="form-label">快捷选择：</div>
+                    <ul id="colorList">
+                      <li data-color="white">白色</li>
+                      <li data-color="red">红色</li>
+                      <li data-color="blue">蓝色</li>
+                      <li data-color="green">绿色</li>
+                      <li data-color="black">黑色</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title mb-3">文本设置</h5>
+                <!-- <div>
+            <h2>字体：</h2>
+            <div>
+              <select id="fontSettingSelect">
+                <option value="Microsoft YaHei, sans-serif">微软雅黑</option>
+                <option value="PingFangSC-Regular, sans-serif">苹果苹方</option>
+                <option value="YouYuan, sans-serif">幼园</option>
+              </select>
+            </div>
+          </div> -->
+                <div class="mb-3">
+                  <label for="fontSizeSettingInput" class="form-label">
+                    字体大小（px）：
+                  </label>
+                  <input
+                    type="number"
+                    id="fontSizeSettingInput"
+                    value="12"
+                    class="form-control"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="fontColorSettingPicker" class="form-label">
+                    字体颜色（16进制）：
+                  </label>
+                  <div>
+                    <input
+                      type="color"
+                      id="fontColorSettingPicker"
+                      value="#fff"
+                      class="col form-control form-control-color mb-2"
+                    />
+                    <input
+                      type="text"
+                      id="fontColorSettingInput"
+                      value="#000"
+                      class="col form-control"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-10 col-sm-12 content">
+            <h5 class="card-title mb-3">内容设置</h5>
+            <div class="card mb-3">
+              <div class="card-body">
+                <h6 class="card-title mb-3">展示区</h5>
+                <div class="canvas-container">
+                  <div id="canvas" class="canvas"></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <input
+                type="text"
+                class="form-control mb-2 col"
+                id="inputText"
+                placeholder="请输入文本替换图片中文字"
+              />
+              <button id="downloadBtn" class="btn btn-primary col">下载</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    // 设置容器高度和宽度
+    document.querySelector("#widthSettingInput").oninput = (e) => {
+      document.querySelector("#canvas").style.width = e.target.value
+        ? `${e.target.value}px`
+        : "0px";
+    };
+
+    document.querySelector("#heightSettingInput").oninput = (e) => {
+      document.querySelector("#canvas").style.height = e.target.value
+        ? `${e.target.value}px`
+        : "0px";
+    };
+
+    document.querySelector("#bgColorSettingPicker").oninput = (e) => {
+      document.querySelector("#canvas").style.backgroundColor = e.target.value;
+    };
+    // 设置容器圆角
+    document.querySelector("#borderRadiusSettingInput").oninput = (e) => {
+      document.querySelector(
+        "#canvas"
+      ).style.borderRadius = `${e.target.value}%`;
+    };
+
+    // 设置容器颜色
+    document.querySelector("#colorList").onclick = (e) => {
+      document.querySelector("#canvas").style.backgroundColor =
+        e.target.dataset.color;
+    };
+
+    // 设置文本字体
+    // document.querySelector("#fontSettingSelect").onchange = (e) => {
+    //   console.log("e.target.value", e.target.value);
+    //   document.querySelector("#canvas").style.fontFamily = e.target.value;
+    // };
+
+    // 设置文本字体大小
+    document.querySelector("#fontSizeSettingInput").oninput = (e) => {
+      document.querySelector("#canvas").style.fontSize = e.target.value
+        ? `${e.target.value}px`
+        : "12px";
+    };
+
+    // 设置文本颜色
+    document.querySelector("#fontColorSettingInput").oninput = (e) => {
+      document.querySelector("#canvas").style.color = e.target.value;
+    };
+
+    document.querySelector("#fontColorSettingPicker").oninput = (e) => {
+      document.querySelector("#fontColorSettingInput").value = e.target.value;
+      document.querySelector("#canvas").style.color = e.target.value;
+    };
+
+    // 设置文本内容
+    document.querySelector("#inputText").oninput = (e) => {
+      document.querySelector("#canvas").textContent = e.target.value;
+    };
+
+    // 下载区域图片
+    document.querySelector("#downloadBtn").onclick = (e) => {
+      toCanvas(document.querySelector("#canvas"));
+    };
+
+    function toCanvas(htmlDom) {
+      html2canvas(htmlDom).then(function (canvas) {
+        document.body.appendChild(canvas);
+        // 将Canvas转换为DataURL
+        const dataURL = canvas.toDataURL("image/png");
+
+        // 创建一个Blob对象
+        const blob = dataURLToBlob(dataURL);
+
+        // 使用FileSaver保存Blob对象为图片文件
+        saveAs(blob, "screenshot.png");
+      });
+    }
+
+    // 将DataURL转换为Blob对象
+    function dataURLToBlob(dataURL) {
+      const byteString = atob(dataURL.split(",")[1]);
+      const mimeString = dataURL.split(",")[0].split(":")[1].split(";")[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: mimeString });
+    }
+  </script>
+</html>
